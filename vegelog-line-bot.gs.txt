@@ -1,0 +1,277 @@
+/**
+ * ベジログ × LINE通知ボット（Google Apps Script）
+ * ------------------------------------------------------
+ * このスクリプトは、Googleスプレッドシートに紐づく「コンテナバインド スクリプト」として
+ * 使うことを想定しています（セットアップ手順書を参照）。
+ *
+ * 役割:
+ *  1. LINEの公式アカウントに届いたメッセージ（Webhook）を受け取り、
+ *     被験者IDとLINEのユーザーIDを紐づけて記録する（アカウント連携）。
+ *  2. ベジログアプリ（vegelog.html）から送られてくる食事記録・血管年齢計測データを
+ *     スプレッドシートに保存する。
+ *  3. 毎日決まった時刻に、
+ *       - その日まだ記録していない人へのリマインダー
+ *       - 学食メニューのお知らせ
+ *       - 計測から1週間後・2週間後の血管年齢の想起リマインダー
+ *     をLINEで自動送信する（時間主導型トリガーで実行）。
+ *
+ * 事前準備（詳細はセットアップ手順書を参照）:
+ *  - このスクリプトを、新規に作成したGoogleスプレッドシートの
+ *    「拡張機能 > Apps Script」から貼り付けてください。
+ *  - 「プロジェクトの設定 > スクリプト プロパティ」に
+ *      CHANNEL_ACCESS_TOKEN … LINE Developersで発行したチャネルアクセストークン
+ *    を設定してください。
+ *  - このスクリプトを「ウェブアプリ」としてデプロイし、
+ *    発行されたURLをLINE Developersの Webhook URL に設定してください。
+ *  - デプロイ後、一度だけ setupTriggers() をこのエディタ上から手動実行し、
+ *    毎日の自動通知トリガーを登録してください。
+ */
+
+// ===== 共通ユーティリティ =====
+
+function getOrCreateSheet_(name, headers) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(headers);
+  }
+  return sheet;
+}
+
+function sheetLinkedUsers_() {
+  return getOrCreateSheet_('LinkedUsers', ['subjectId', 'lineUserId', 'linkedAt']);
+}
+function sheetLogs_() {
+  return getOrCreateSheet_('Logs', ['subjectId', 'date', 'time', 'name', 'grams', 'source', 'loggedAt']);
+}
+function sheetMeasurements_() {
+  return getOrCreateSheet_('Measurements', ['subjectId', 'date', 'vage', 'realAge', 'vegi', 'loggedAt']);
+}
+
+function getAccessToken_() {
+  var token = PropertiesService.getScriptProperties().getProperty('CHANNEL_ACCESS_TOKEN');
+  if (!token) {
+    throw new Error('スクリプトプロパティに CHANNEL_ACCESS_TOKEN が設定されていません。');
+  }
+  return token;
+}
+
+// vegelogアプリを公開したURL（任意）。スクリプトプロパティ VEGELOG_URL に設定すると、
+// リマインダー等のメッセージ末尾に「ベジログを開く: <URL>」が自動で付くようになる。
+// 未設定の場合は空文字を返し、メッセージにはリンクを付けない。
+function getVegelogUrl_() {
+  return PropertiesService.getScriptProperties().getProperty('VEGELOG_URL') || '';
+}
+
+// メッセージ本文に、設定されていればvegelogのリンクを付加する
+function withAppLink_(text) {
+  var url = getVegelogUrl_();
+  if (!url) return text;
+  return text + '\n\nベジログを開く: ' + url;
+}
+
+// ===== エントリーポイント =====
+
+// ブラウザや curl から動作確認するための簡易GET
+function doGet(e) {
+  return ContentService.createTextOutput('ベジログ LINE連携スクリプトは正常に稼働しています。');
+}
+
+// LINEのWebhook、および vegelog アプリからのデータ同期を受け取る
+function doPost(e) {
+  try {
+    var action = e.parameter && e.parameter.action;
+
+    if (action === 'synclog') {
+      handleSyncLog_(e);
+      return ContentService.createTextOutput('OK');
+    }
+    if (action === 'syncmeasurement') {
+      handleSyncMeasurement_(e);
+      return ContentService.createTextOutput('OK');
+    }
+
+    // action指定が無い場合はLINEのWebhookとみなす
+    var body = JSON.parse(e.postData.contents);
+    if (body && body.events) {
+      handleLineWebhook_(body);
+    }
+    return ContentService.createTextOutput('OK');
+  } catch (err) {
+    // LINE Developersの「検証」やエラー調査用にログへ残す
+    Logger.log('doPost error: ' + err);
+    return ContentService.createTextOutput('ERROR: ' + err);
+  }
+}
+
+// ===== vegelogアプリからのデータ同期 =====
+
+function handleSyncLog_(e) {
+  var data = JSON.parse(e.postData.contents);
+  sheetLogs_().appendRow([
+    data.subjectId || '',
+    data.date || '',
+    data.time || '',
+    data.name || '',
+    data.grams || 0,
+    data.source || '',
+    new Date()
+  ]);
+}
+
+function handleSyncMeasurement_(e) {
+  var data = JSON.parse(e.postData.contents);
+  sheetMeasurements_().appendRow([
+    data.subjectId || '',
+    data.date || '',
+    data.vage || '',
+    data.realAge || '',
+    data.vegi || '',
+    new Date()
+  ]);
+}
+
+// ===== LINE Webhookの処理（友だち追加・メッセージ受信） =====
+
+function handleLineWebhook_(body) {
+  body.events.forEach(function (ev) {
+    if (ev.type === 'follow') {
+      // 友だち追加時のあいさつ + 連携方法の案内
+      replyMessage_(
+        ev.replyToken,
+        withAppLink_(
+          'ベジログを友だち追加ありがとうございます🥦\n' +
+          'このトークに、ベジログアプリに登録した「被験者ID」（例: S001）を送信してください。\n' +
+          '連携が完了すると、記録忘れリマインダーや血管年齢の想起通知が届くようになります。'
+        )
+      );
+      return;
+    }
+
+    if (ev.type === 'message' && ev.message.type === 'text') {
+      var userId = ev.source.userId;
+      var text = ev.message.text.trim();
+      linkUser_(userId, text, ev.replyToken);
+    }
+  });
+}
+
+function linkUser_(userId, subjectId, replyToken) {
+  var sheet = sheetLinkedUsers_();
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][1] === userId) {
+      // 既に連携済み。被験者IDの上書き（別IDを送ってきた場合）に対応
+      sheet.getRange(i + 1, 1).setValue(subjectId);
+      replyMessage_(replyToken, '被験者ID「' + subjectId + '」に連携先を更新しました。');
+      return;
+    }
+  }
+
+  sheet.appendRow([subjectId, userId, new Date()]);
+  replyMessage_(
+    replyToken,
+    withAppLink_(
+      '被験者ID「' + subjectId + '」で連携しました！\n' +
+      'これから記録忘れリマインダーや学食のお知らせ、血管年齢の想起通知をこのトークにお届けします。'
+    )
+  );
+}
+
+// ===== LINEへのメッセージ送信 =====
+
+function replyMessage_(replyToken, text) {
+  UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: 'Bearer ' + getAccessToken_() },
+    payload: JSON.stringify({ replyToken: replyToken, messages: [{ type: 'text', text: text }] })
+  });
+}
+
+function pushMessage_(userId, text) {
+  UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: 'Bearer ' + getAccessToken_() },
+    payload: JSON.stringify({ to: userId, messages: [{ type: 'text', text: text }] })
+  });
+}
+
+// ===== 毎日の自動通知（時間主導型トリガーから呼び出される） =====
+
+// その日まだ記録が無い連携ユーザーへのリマインダー（例: 21:30に実行）
+function notifyForgotten() {
+  var today = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd');
+  var linked = sheetLinkedUsers_().getDataRange().getValues();
+  var logs = sheetLogs_().getDataRange().getValues();
+
+  var loggedToday = {};
+  for (var i = 1; i < logs.length; i++) {
+    if (logs[i][1] === today) loggedToday[logs[i][0]] = true;
+  }
+
+  for (var j = 1; j < linked.length; j++) {
+    var subjectId = linked[j][0];
+    var userId = linked[j][1];
+    if (!loggedToday[subjectId]) {
+      pushMessage_(userId, withAppLink_('今日はまだ野菜の記録がありません🥦\n忘れないうちにベジログを開いて記録しましょう！'));
+    }
+  }
+}
+
+// 学食メニューのお知らせ（例: 11:00に実行。内容は必要に応じて書き換えてください）
+function notifyCanteen() {
+  var linked = sheetLinkedUsers_().getDataRange().getValues();
+  for (var j = 1; j < linked.length; j++) {
+    pushMessage_(linked[j][1], withAppLink_('🍱 本日の学食は野菜たっぷりメニューが登場中！ぜひ選んで記録してくださいね。'));
+  }
+}
+
+// 計測から1週間後・2週間後の血管年齢 想起リマインダー（例: 9:00に実行）
+function notifyRecall() {
+  var today = new Date();
+  var linked = sheetLinkedUsers_().getDataRange().getValues();
+  var linkedMap = {};
+  for (var j = 1; j < linked.length; j++) {
+    linkedMap[linked[j][0]] = linked[j][1];
+  }
+
+  var meas = sheetMeasurements_().getDataRange().getValues();
+  for (var i = 1; i < meas.length; i++) {
+    var subjectId = meas[i][0];
+    var dateStr = meas[i][1];
+    var vage = meas[i][2];
+    var realAge = meas[i][3];
+    if (!dateStr || !linkedMap[subjectId]) continue;
+
+    var measDate = new Date(dateStr + 'T00:00:00');
+    var diffDays = Math.round((today - measDate) / 86400000);
+
+    if (diffDays === 7 || diffDays === 14) {
+      var diff = vage - realAge;
+      var msg =
+        '計測から' + diffDays + '日が経ちました。\n' +
+        'あなたの血管年齢は ' + vage + '歳（実年齢との差 ' + (diff >= 0 ? '+' : '') + diff + '歳）でした。\n' +
+        '野菜の記録を続けて、次回の計測に備えましょう🥦';
+      pushMessage_(linkedMap[subjectId], withAppLink_(msg));
+    }
+  }
+}
+
+// ===== 初期セットアップ（デプロイ後、エディタから一度だけ手動実行） =====
+
+function setupTriggers() {
+  // 既存のトリガーをいったん全て削除してから再登録（重複実行防止）
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    ScriptApp.deleteTrigger(t);
+  });
+
+  ScriptApp.newTrigger('notifyForgotten').timeBased().everyDays(1).atHour(21).create();
+  ScriptApp.newTrigger('notifyCanteen').timeBased().everyDays(1).atHour(11).create();
+  ScriptApp.newTrigger('notifyRecall').timeBased().everyDays(1).atHour(9).create();
+
+  Logger.log('トリガーを登録しました。');
+}

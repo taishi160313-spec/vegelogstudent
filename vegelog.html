@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ベジログ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --m50:#F3F6EC; --m100:#E2EAD2; --m200:#C9D9AC; --m400:#8FAE5C;
+  --m600:#5C7F33; --m700:#466423; --m900:#233314;
+  --c100:#FBE6D2; --c400:#EFA15C; --c600:#D87B2C;
+  --cream:#FBFAF5; --paper:#FFFFFF;
+  --ink9:#20281B; --ink6:#5B6650; --ink4:#8C9783;
+  --line:rgba(35,51,20,0.10);
+  --rl:22px; --rm:14px; --rs:9px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--cream);font-family:"Noto Sans JP",sans-serif;color:var(--ink9);-webkit-font-smoothing:antialiased;}
+.dp{font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif;}
+
+/* ===== PAGE SYSTEM ===== */
+.page{display:none;max-width:420px;margin:0 auto;min-height:100vh;background:var(--cream);padding-bottom:96px;}
+.page.active{display:block;}
+
+/* ===== ONBOARDING / MEASUREMENT ===== */
+.ob-wrap{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:36px 28px 48px;}
+.ob-logo{font-size:32px;margin:0 0 6px;}
+.ob-title{font-size:24px;font-weight:700;margin:0 0 8px;line-height:1.3;}
+.ob-sub{font-size:13.5px;color:var(--ink6);margin:0 0 36px;line-height:1.7;}
+.ob-step{font-size:11px;font-weight:700;color:var(--m600);letter-spacing:.06em;margin:0 0 24px;}
+.field{margin-bottom:20px;}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink6);margin-bottom:7px;letter-spacing:.02em;}
+.field input{width:100%;border:1.5px solid var(--line);background:var(--paper);border-radius:var(--rm);padding:14px 16px;font-size:16px;font-family:inherit;color:var(--ink9);outline:none;}
+.field input:focus{border-color:var(--m400);}
+.field .hint{font-size:11px;color:var(--ink4);margin-top:5px;line-height:1.5;}
+.radio-row{display:flex;gap:10px;}
+.radio-btn{flex:1;border:1.5px solid var(--line);background:var(--paper);border-radius:var(--rm);padding:13px;text-align:center;font-size:13.5px;font-weight:700;color:var(--ink6);cursor:pointer;font-family:inherit;}
+.radio-btn.sel{border-color:var(--m400);background:var(--m50);color:var(--m700);}
+.ob-btn{width:100%;border:none;background:var(--m700);color:#fff;font-family:inherit;font-weight:700;font-size:15px;padding:17px;border-radius:var(--rm);cursor:pointer;margin-top:8px;}
+.ob-btn:disabled{background:var(--m200);color:var(--ink4);cursor:not-allowed;}
+
+/* ===== SHOCK SCREEN ===== */
+.shock-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;background:var(--m900);color:#fff;position:relative;overflow:hidden;}
+.shock-wrap::before{content:"";position:absolute;width:400px;height:400px;border-radius:50%;background:var(--m700);top:-200px;right:-160px;opacity:.4;}
+.shock-wrap::after{content:"";position:absolute;width:300px;height:300px;border-radius:50%;background:var(--m600);bottom:-160px;left:-120px;opacity:.3;}
+.shock-content{position:relative;z-index:1;}
+.shock-badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:6px 16px;font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--m200);margin-bottom:28px;}
+.shock-num{font-size:88px;font-weight:700;line-height:1;display:block;}
+.shock-num-unit{font-size:20px;font-weight:500;color:var(--m200);}
+.shock-vs{font-size:13px;color:var(--m200);margin:0 0 28px;}
+.shock-vs strong{color:#fff;font-size:15px;}
+.shock-msg{font-size:17px;font-weight:700;line-height:1.7;margin:0 0 8px;}
+.shock-msg-sub{font-size:13px;color:var(--m100);line-height:1.7;margin:0 0 32px;}
+.shock-diff-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:var(--rm);padding:12px 20px;margin-bottom:32px;}
+.shock-diff-num{font-size:28px;font-weight:700;}
+.shock-diff-lbl{font-size:12px;color:var(--m200);text-align:left;line-height:1.5;}
+.shock-cta{width:100%;border:none;background:#fff;color:var(--m900);font-family:inherit;font-weight:700;font-size:15px;padding:17px;border-radius:var(--rm);cursor:pointer;}
+.shock-skip{margin-top:14px;font-size:12px;color:var(--m400);background:none;border:none;font-family:inherit;cursor:pointer;}
+
+/* ===== HISTORY PAGE ===== */
+.hist-page{padding:18px 18px 40px;}
+.hist-date-group{margin-bottom:24px;}
+.hist-date-label{font-size:12px;font-weight:700;color:var(--ink4);letter-spacing:.04em;margin:0 0 10px 2px;}
+.hist-item{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:var(--rm);padding:12px 14px;margin-bottom:8px;cursor:pointer;}
+.hist-item:active{background:var(--m50);}
+.hist-chev{color:var(--ink4);font-size:15px;flex-shrink:0;}
+.sub-btn.danger{background:var(--paper);color:var(--c600);border:1.5px solid var(--c400);margin-top:10px;}
+.hist-thumb{width:44px;height:44px;border-radius:10px;background:var(--m50);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.hist-info{flex:1;min-width:0;}
+.hist-name{font-size:13.5px;font-weight:700;color:var(--ink9);margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-meta{font-size:11px;color:var(--ink4);margin:0;display:flex;align-items:center;gap:6px;}
+.hist-veg{display:inline-flex;align-items:center;gap:3px;background:var(--m100);color:var(--m700);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;}
+.hist-time{font-size:11px;color:var(--ink4);}
+.hist-type{font-size:10px;color:var(--ink4);background:var(--cream);border:1px solid var(--line);border-radius:4px;padding:2px 6px;flex-shrink:0;}
+.hist-empty{text-align:center;padding:60px 20px;color:var(--ink4);}
+.hist-empty-icon{font-size:40px;margin-bottom:12px;}
+.hist-empty-txt{font-size:13.5px;font-weight:700;color:var(--ink6);margin:0 0 6px;}
+.hist-empty-sub{font-size:12px;color:var(--ink4);margin:0 0 20px;line-height:1.6;}
+.hist-add-btn{border:none;background:var(--m700);color:#fff;font-family:inherit;font-weight:700;font-size:13.5px;padding:12px 24px;border-radius:999px;cursor:pointer;}
+.hist-summary{background:var(--m50);border:1px solid var(--m100);border-radius:var(--rm);padding:14px 16px;margin-bottom:20px;display:flex;gap:0;}
+.hist-sum-item{flex:1;text-align:center;}
+.hist-sum-item+.hist-sum-item{border-left:1px solid var(--m200);}
+.hist-sum-num{font-size:22px;font-weight:700;color:var(--m700);margin:0 0 2px;}
+.hist-sum-lbl{font-size:10.5px;color:var(--ink6);margin:0;}
+
+/* ===== VAGE PAGE ===== */
+.vage-page{padding:22px 18px 40px;}
+.vage-hero{background:var(--m900);border-radius:var(--rl);padding:28px 24px;color:#fff;position:relative;overflow:hidden;margin-bottom:20px;}
+.vage-hero::before{content:"";position:absolute;width:200px;height:200px;border-radius:50%;background:var(--m700);top:-100px;right:-60px;opacity:.5;}
+.vage-hero-inner{position:relative;}
+.vage-eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--m200);margin:0 0 14px;}
+.vage-nums{display:flex;align-items:flex-end;gap:20px;margin-bottom:14px;}
+.vage-main{text-align:center;}
+.vage-main .label{font-size:11px;color:var(--m200);margin:0 0 4px;}
+.vage-main .big{font-size:56px;font-weight:700;line-height:1;}
+.vage-main .unit{font-size:15px;color:var(--m200);}
+.vage-sep{width:1px;height:60px;background:rgba(255,255,255,.2);flex-shrink:0;margin-bottom:8px;}
+.vage-real{text-align:center;}
+.vage-real .label{font-size:11px;color:var(--m200);margin:0 0 4px;}
+.vage-real .big{font-size:36px;font-weight:700;line-height:1;color:rgba(255,255,255,.7);}
+.vage-real .unit{font-size:13px;color:var(--m200);}
+.vage-diff-row{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;}
+.vage-diff-row .d-num{font-size:20px;font-weight:700;}
+.vage-diff-row .d-lbl{font-size:12px;color:var(--m200);line-height:1.5;}
+.vage-date{font-size:11px;color:var(--m400);margin-top:10px;}
+
+.countdown-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--rl);padding:22px 20px;display:flex;gap:16px;align-items:center;}
+.cd-icon{width:52px;height:52px;border-radius:16px;background:var(--m50);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.cd-info{flex:1;}
+.cd-label{font-size:11.5px;color:var(--ink6);margin:0 0 4px;}
+.cd-days{font-size:28px;font-weight:700;color:var(--m700);line-height:1;margin:0 0 4px;}
+.cd-sub{font-size:11.5px;color:var(--ink4);margin:0;}
+.cd-bar-wrap{margin-top:14px;background:var(--m100);border-radius:999px;height:6px;overflow:hidden;}
+.cd-bar{height:100%;border-radius:999px;background:var(--m600);}
+
+/* ===== 計測履歴カード ===== */
+.mh-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--rl);padding:18px 16px;margin-top:16px;}
+.mh-title{font-size:13px;font-weight:700;color:var(--ink9);margin:0 0 12px;}
+.mh-list{display:flex;flex-direction:column;gap:8px;}
+.mh-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--m50);border-radius:var(--rs);font-size:12.5px;}
+.mh-date{color:var(--ink6);}
+.mh-val{font-weight:700;color:var(--m700);}
+
+/* ===== BOTTOM NAV ===== */
+.bnav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:420px;
+  background:var(--paper);border-top:1px solid var(--line);
+  display:flex;padding:10px 10px calc(10px + env(safe-area-inset-bottom));gap:2px;
+  z-index:100;
+}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink4);font-size:10px;font-weight:500;padding:4px 0;cursor:pointer;}
+.ni.active{color:var(--m700);}
+.ni-icon{font-size:18px;}
+
+/* ===== TOPBAR ===== */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 22px 6px;}
+.topbar .gr{font-size:13px;color:var(--ink6);margin:0 0 2px;}
+.topbar .nm{font-size:19px;font-weight:700;margin:0;color:var(--ink9);}
+.av{width:42px;height:42px;border-radius:50%;background:var(--m200);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--m900);flex-shrink:0;}
+
+/* ===== HERO ===== */
+.hero{margin:14px 18px 0;background:var(--m900);border-radius:var(--rl);padding:26px 24px 24px;position:relative;overflow:hidden;color:#fff;}
+.hero::before{content:"";position:absolute;width:230px;height:230px;border-radius:50%;background:var(--m700);top:-120px;right:-70px;opacity:.55;}
+.hero::after{content:"";position:absolute;width:140px;height:140px;border-radius:50%;background:var(--m600);bottom:-80px;left:-50px;opacity:.4;}
+.hero-row{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;}
+.hero-lbl{font-size:12.5px;letter-spacing:.04em;color:var(--m200);margin:0 0 6px;}
+.hero-val{display:flex;align-items:baseline;gap:6px;}
+.hero-val .num{font-size:44px;font-weight:700;line-height:1;}
+.hero-val .unit{font-size:14px;color:var(--m100);padding-bottom:4px;}
+.hero-sub{font-size:12.5px;color:var(--m100);margin:8px 0 0;line-height:1.6;}
+.hero-sub strong{color:#fff;font-weight:700;}
+
+/* ===== BUTTONS ===== */
+.log-cta{margin:16px 18px 0;display:flex;gap:10px;}
+.log-cta button{flex:1;border:none;cursor:pointer;font-family:inherit;}
+.btn-p{background:var(--c600);color:#fff;border-radius:var(--rm);padding:16px 14px;font-size:14.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 18px -8px rgba(216,123,44,.55);}
+.btn-s{background:var(--paper);border:1.5px solid var(--line);color:var(--ink9);border-radius:var(--rm);padding:16px;font-size:14.5px;font-weight:700;width:58px;display:flex;align-items:center;justify-content:center;}
+
+/* ===== クイック記録 ===== */
+.qadd-row{margin:12px 18px 0;display:flex;gap:8px;flex-wrap:wrap;}
+.qadd-btn{border:1.5px solid var(--line);background:var(--paper);color:var(--m700);font-family:inherit;font-size:12px;font-weight:700;padding:9px 13px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.qadd-btn:active{background:var(--m50);}
+
+/* ===== SECTION ===== */
+.sec{margin:26px 18px 0;}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+.sec-ttl{font-size:15px;font-weight:700;margin:0;color:var(--ink9);}
+.sec-lnk{font-size:12px;color:var(--m600);font-weight:500;text-decoration:none;background:none;border:none;font-family:inherit;cursor:pointer;}
+.card{background:var(--paper);border-radius:var(--rl);border:1px solid var(--line);padding:18px 16px 14px;}
+
+/* ===== RECO CARD ===== */
+.reco-card{background:linear-gradient(180deg,#FBF8F0 0%,var(--paper) 100%);border:1px solid var(--c100);border-radius:var(--rl);padding:16px;display:flex;gap:12px;align-items:center;cursor:pointer;}
+.reco-thumb{width:58px;height:58px;border-radius:14px;background:var(--c100);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;}
+.reco-eye{font-size:10.5px;font-weight:700;color:var(--c600);letter-spacing:.03em;margin:0 0 3px;}
+.reco-name{font-size:14px;font-weight:700;color:var(--ink9);margin:0 0 4px;}
+.reco-sub{font-size:11.5px;color:var(--ink6);margin:0;}
+.reco-arr{color:var(--c600);font-size:18px;flex-shrink:0;}
+
+/* ===== RECALL CARD ===== */
+.recall-card{background:var(--m900);border-radius:var(--rl);padding:18px;color:#fff;position:relative;overflow:hidden;}
+.recall-card::before{content:"";position:absolute;width:150px;height:150px;border-radius:50%;background:var(--m700);top:-90px;right:-50px;opacity:.5;}
+.recall-row{position:relative;display:flex;gap:12px;align-items:flex-start;}
+.recall-icon{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.14);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.recall-eye{font-size:10.5px;color:var(--m200);font-weight:700;letter-spacing:.03em;margin:0 0 4px;}
+.recall-ttl{font-size:13.5px;font-weight:700;margin:0 0 6px;line-height:1.5;}
+.recall-stat{display:inline-flex;align-items:baseline;gap:5px;background:rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;margin-bottom:8px;}
+.recall-stat .v{font-size:16px;font-weight:700;}
+.recall-stat .l{font-size:10.5px;color:var(--m200);}
+.recall-sub{font-size:11.5px;color:var(--m100);margin:0;line-height:1.6;}
+.recall-cta{position:relative;width:100%;margin-top:14px;border:none;background:rgba(255,255,255,.92);color:var(--m900);font-family:inherit;font-weight:700;font-size:12.5px;padding:11px;border-radius:999px;cursor:pointer;}
+
+/* ===== WEEK CHART ===== */
+.wchart{display:flex;align-items:flex-end;justify-content:space-between;height:110px;padding:0 2px;}
+.bc{display:flex;flex-direction:column;align-items:center;gap:8px;width:13%;}
+.bt{width:100%;height:78px;display:flex;align-items:flex-end;justify-content:center;}
+.bar{width:64%;border-radius:6px 6px 3px 3px;background:var(--m200);}
+.bar.today{background:var(--c400);}
+.bd{font-size:11px;color:var(--ink4);font-weight:500;}
+.bc.is-today .bd{color:var(--c600);font-weight:700;}
+.clegend{display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+.cli{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink6);}
+.cld{width:8px;height:8px;border-radius:50%;}
+
+/* ===== SHOCK CALLOUT ===== */
+.shock-card{margin-top:12px;background:var(--m50);border:1px solid var(--m200);border-radius:var(--rm);padding:14px;display:flex;gap:12px;align-items:flex-start;}
+.shock-ic{width:34px;height:34px;border-radius:50%;background:var(--m600);color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.shock-t1{font-size:12.5px;font-weight:700;color:var(--m900);margin:0 0 2px;}
+.shock-t2{font-size:12px;color:var(--ink6);line-height:1.6;margin:0;}
+
+/* ===== SHEET ===== */
+.overlay{position:fixed;inset:0;background:rgba(32,40,27,.42);display:none;align-items:flex-end;justify-content:center;z-index:200;}
+.overlay.open{display:flex;}
+.sheet{width:100%;max-width:420px;background:var(--cream);border-radius:26px 26px 0 0;padding:10px 22px 28px;animation:slideUp .28s ease;max-height:88vh;overflow-y:auto;}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.sh{width:36px;height:4px;background:var(--line);border-radius:2px;margin:8px auto 18px;}
+.st{font-size:17px;font-weight:700;margin:0 0 4px;}
+.ss{font-size:12.5px;color:var(--ink6);margin:0 0 20px;}
+.sclose{position:absolute;top:14px;right:18px;width:28px;height:28px;border-radius:50%;background:var(--m100);border:none;color:var(--m700);font-size:14px;cursor:pointer;}
+
+/* ===== MODE TABS ===== */
+.mtabs{display:flex;background:var(--m100);border-radius:999px;padding:4px;margin-bottom:18px;gap:4px;}
+.mtab{flex:1;border:none;background:transparent;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--m700);padding:10px 4px;border-radius:999px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
+.mtab.active{background:var(--paper);color:var(--m900);box-shadow:0 2px 6px -2px rgba(35,51,20,.18);}
+.mpanel{display:none;}
+.mpanel.active{display:block;}
+
+/* ===== CANTEEN ===== */
+.cdate{font-size:12px;color:var(--ink4);margin:0 0 12px;}
+.clist{display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;margin-bottom:18px;}
+.mc{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);background:var(--paper);border-radius:var(--rm);padding:10px;cursor:pointer;}
+.mc.selected{border-color:var(--m400);background:var(--m50);}
+.mth{width:56px;height:56px;border-radius:12px;background:var(--m200);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.mi{flex:1;min-width:0;}
+.mn{font-size:13.5px;font-weight:700;color:var(--ink9);margin:0 0 3px;}
+.mm{font-size:11.5px;color:var(--ink6);margin:0;display:flex;align-items:center;gap:6px;}
+.vbadge{display:inline-flex;align-items:center;gap:3px;background:var(--m100);color:var(--m700);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;}
+.chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:transparent;font-size:12px;font-weight:700;}
+.mc.selected .chk{background:var(--m600);border-color:var(--m600);color:#fff;}
+
+/* ===== 手動記録タブ ===== */
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.manual-item{border:1.5px solid var(--line);background:var(--paper);border-radius:var(--rm);padding:14px 10px;text-align:center;cursor:pointer;font-family:inherit;}
+.manual-item .e{font-size:26px;display:block;margin-bottom:6px;}
+.manual-item .t{font-size:12px;font-weight:700;color:var(--ink9);display:block;}
+.manual-item .g{font-size:10.5px;color:var(--ink6);display:block;margin-top:2px;}
+.manual-item:active{background:var(--m50);border-color:var(--m400);}
+
+/* ===== PHOTO ===== */
+.pdrop{border:2px dashed var(--m200);border-radius:var(--rm);padding:30px 18px;text-align:center;margin-bottom:16px;background:var(--m50);}
+.pdrop-ic{width:52px;height:52px;border-radius:50%;background:var(--paper);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1.5px solid var(--m200);}
+.pdrop-t{font-size:13.5px;font-weight:700;color:var(--ink9);margin:0 0 4px;}
+.pdrop-s{font-size:11.5px;color:var(--ink6);margin:0 0 16px;line-height:1.6;}
+.pbtnrow{display:flex;gap:8px;justify-content:center;}
+.pbtn{border:none;font-family:inherit;font-size:12.5px;font-weight:700;padding:10px 16px;border-radius:999px;cursor:pointer;}
+.pbtn.prim{background:var(--c600);color:#fff;}
+.pbtn.ghost{background:var(--paper);color:var(--m700);border:1.5px solid var(--m200);}
+.air{background:var(--paper);border:1.5px solid var(--m200);border-radius:var(--rm);padding:14px;margin-bottom:16px;}
+.airh{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.aipp{width:48px;height:48px;border-radius:10px;background:var(--m200);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.airt{font-size:13px;font-weight:700;color:var(--ink9);margin:0 0 2px;}
+.airs{font-size:11px;color:var(--m600);margin:0;}
+.aidl{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:4px;}
+.dc{display:flex;align-items:center;gap:5px;background:var(--m50);border:1px solid var(--m200);border-radius:999px;padding:5px 10px 5px 6px;font-size:11.5px;color:var(--m900);font-weight:500;}
+.dc .e{font-size:14px;}
+.ainote{font-size:10.5px;color:var(--ink4);margin:10px 0 0;line-height:1.6;}
+.sub-btn{width:100%;border:none;background:var(--m700);color:#fff;font-weight:700;font-size:15px;padding:16px;border-radius:var(--rm);font-family:inherit;cursor:pointer;}
+.sub-btn:disabled{background:var(--m200);color:var(--ink4);cursor:not-allowed;}
+.ai-loading{text-align:center;padding:44px 18px;}
+.ai-spin{display:inline-block;font-size:36px;margin-bottom:14px;animation:aiSpin 1.1s linear infinite;}
+@keyframes aiSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.ai-loading-txt{font-size:13px;color:var(--ink6);margin:0;}
+.ai-error{background:var(--c100);border:1px solid var(--c400);border-radius:var(--rm);padding:14px;margin-bottom:16px;font-size:12px;color:var(--c600);line-height:1.6;}
+
+/* ===== SETTINGS PAGE ===== */
+.pg-header{display:flex;align-items:center;gap:12px;padding:20px 18px 8px;}
+.pg-back{width:36px;height:36px;border-radius:50%;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--ink9);cursor:pointer;flex-shrink:0;}
+.pg-title{font-size:17px;font-weight:700;margin:0;}
+.sg{margin:22px 18px 0;}
+.sgl{font-size:11.5px;font-weight:700;color:var(--ink4);letter-spacing:.03em;margin:0 0 8px 4px;}
+.sc{background:var(--paper);border-radius:var(--rl);border:1px solid var(--line);overflow:hidden;}
+.sr{display:flex;align-items:center;gap:12px;padding:14px 16px;}
+.sr+.sr{border-top:1px solid var(--line);}
+.sri{width:34px;height:34px;border-radius:10px;background:var(--m50);color:var(--m700);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.srt{flex:1;min-width:0;}
+.srtl{font-size:13.5px;font-weight:500;color:var(--ink9);margin:0 0 2px;}
+.srts{font-size:11px;color:var(--ink6);margin:0;line-height:1.5;}
+.tgl{width:42px;height:25px;border-radius:999px;background:var(--m200);position:relative;flex-shrink:0;cursor:pointer;border:none;padding:0;}
+.tgl.on{background:var(--m600);}
+.tknob{position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:transform .18s ease;}
+.tgl.on .tknob{transform:translateX(17px);}
+.tprow{display:flex;gap:8px;flex-wrap:wrap;padding:4px 16px 14px;}
+.tp{border:1.5px solid var(--line);background:var(--cream);color:var(--ink6);font-family:inherit;font-size:12px;font-weight:500;padding:7px 13px;border-radius:999px;cursor:pointer;}
+.tp.sel{background:var(--m700);border-color:var(--m700);color:#fff;font-weight:700;}
+</style>
+</head>
+<body>
+
+<!-- ===== STEP1: 初回登録 ===== -->
+<div class="page active" id="pgOnboard">
+  <div class="ob-wrap">
+    <p class="ob-logo">🥦</p>
+    <h1 class="ob-title dp">ベジログへようこそ</h1>
+    <p class="ob-sub">血管年齢と野菜摂取の記録を通じて、<br>あなたの健康習慣をサポートします。<br>まず基本情報を登録してください。</p>
+    <p class="ob-step">STEP 1 / 2 — 基本情報</p>
+    <div class="field">
+      <label>被験者ID</label>
+      <input type="text" id="inId" placeholder="例: S001" oninput="checkOb()">
+      <p class="hint">研究者から配布されたIDを入力してください</p>
+    </div>
+    <div class="field">
+      <label>実年齢</label>
+      <input type="number" id="inAge" placeholder="例: 21" min="18" max="30" oninput="checkOb()">
+    </div>
+    <div class="field">
+      <label>性別</label>
+      <div class="radio-row">
+        <button class="radio-btn" onclick="selGender(this,'男性')">男性</button>
+        <button class="radio-btn" onclick="selGender(this,'女性')">女性</button>
+        <button class="radio-btn" onclick="selGender(this,'その他')">その他</button>
+      </div>
+    </div>
+    <button class="ob-btn" id="obBtn1" disabled onclick="goStep2()">次へ →</button>
+  </div>
+</div>
+
+<!-- ===== STEP2: 血管年齢・ベジチェック入力 ===== -->
+<div class="page" id="pgMeasure">
+  <div style="position:relative;">
+    <button onclick="showPage('pgOnboard')" style="position:absolute;top:18px;left:18px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink6);">‹</button>
+  </div>
+  <div class="ob-wrap" style="padding-top:52px;">
+    <p class="ob-logo">💓</p>
+    <h1 class="ob-title dp">計測値を入力</h1>
+    <p class="ob-sub">装置に表示された数値をそのまま入力してください。</p>
+    <p class="ob-step">STEP 2 / 2 — 計測値</p>
+    <div class="field">
+      <label>血管年齢（歳）</label>
+      <input type="number" id="inVage" placeholder="例: 29" min="18" max="80" oninput="checkMeasure()">
+      <p class="hint">血管年齢計（フィジオン等）に表示された値</p>
+    </div>
+    <div class="field">
+      <label>ベジチェック値</label>
+      <input type="number" id="inVegi" placeholder="例: 42" min="0" max="100" oninput="checkMeasure()">
+      <p class="hint">ベジチェック装置に表示されたスコア</p>
+    </div>
+    <button class="ob-btn" id="obBtn2" disabled onclick="submitMeasure()">結果を見る</button>
+  </div>
+</div>
+
+<!-- ===== ショックメッセージ画面 ===== -->
+<div class="page" id="pgShock">
+  <div class="shock-wrap">
+    <div class="shock-content">
+      <span class="shock-badge">あなたの血管年齢</span>
+      <div>
+        <span class="shock-num dp" id="shockVageNum">29</span>
+        <span class="shock-num-unit">歳</span>
+      </div>
+      <p class="shock-vs">実年齢 <strong id="shockRealAge">21歳</strong> に対して</p>
+      <div class="shock-diff-badge">
+        <span class="shock-diff-num dp" id="shockDiff">+8歳</span>
+        <span class="shock-diff-lbl">実年齢より<br>血管が老けています</span>
+      </div>
+      <p class="shock-msg dp" id="shockMsg">今の生活習慣を<br>見直すチャンスです。</p>
+      <p class="shock-msg-sub" id="shockMsgSub">野菜を意識して摂ることで、<br>血管年齢は改善できます。<br>一緒に記録を続けましょう。</p>
+      <button class="shock-cta" onclick="goHome()">記録をはじめる →</button>
+      <button class="shock-skip" onclick="goHome()">スキップ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HOME PAGE ===== -->
+<div class="page" id="pgHome">
+
+  <!-- トップバー -->
+  <div class="topbar">
+    <div>
+      <p class="gr">おかえりなさい</p>
+      <p class="nm dp" id="homeUsername">けいたさん</p>
+    </div>
+    <div class="av" id="homeAvatar">KT</div>
+  </div>
+
+  <!-- 今日の野菜量 Hero -->
+  <div class="hero">
+    <div class="hero-row">
+      <div>
+        <p class="hero-lbl">今日の野菜量（目安）</p>
+        <div class="hero-val">
+          <span class="num dp" id="homeVegiScore">0</span>
+          <span class="unit">g</span>
+        </div>
+        <div style="margin:6px 0 0;background:rgba(255,255,255,.15);border-radius:999px;height:6px;width:160px;">
+          <div id="homeVegiBar" style="height:100%;border-radius:999px;background:var(--m200);width:0%;transition:width .4s ease;"></div>
+        </div>
+        <p class="hero-sub" id="homeVegiSub">目標 320g まであと 320g</p>
+      </div>
+      <div style="flex-shrink:0;text-align:center;">
+        <div style="font-size:48px;line-height:1;">🥗</div>
+        <p style="font-size:10px;color:var(--m200);margin:6px 0 0;">目標: 1日320g</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="log-cta">
+    <button class="btn-p" onclick="openSheet()"><span>+</span> 食事を記録する</button>
+  </div>
+
+  <!-- クイック記録 -->
+  <div class="qadd-row">
+    <button class="qadd-btn" onclick="quickAdd('野菜を追加',70,'🥬')">＋1皿 (70g)</button>
+    <button class="qadd-btn" onclick="quickAdd('野菜を追加',140,'🥗')">＋2皿 (140g)</button>
+    <button class="qadd-btn" onclick="quickAdd('野菜ジュース',50,'🧃')">🧃 野菜ジュース</button>
+  </div>
+
+  <!-- 週間推移 -->
+  <div class="sec">
+    <div class="sec-head">
+      <p class="sec-ttl dp">今週の野菜摂取量</p>
+      <button class="sec-lnk" onclick="nav('history')">履歴を見る ›</button>
+    </div>
+    <div class="card">
+      <div class="wchart" id="weekChart"></div>
+      <div class="clegend">
+        <div class="cli"><span class="cld" style="background:var(--m200);"></span>過去の記録</div>
+        <div class="cli"><span class="cld" style="background:var(--c400);"></span>今日</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- おすすめメニュー -->
+  <div class="sec">
+    <div class="sec-head">
+      <p class="sec-ttl dp">今日の学食メニュー</p>
+    </div>
+    <div class="reco-card" onclick="openSheet()">
+      <div class="reco-thumb">🥗</div>
+      <div style="flex:1;min-width:0;">
+        <p class="reco-eye">🍱 今日の学食 · 野菜たっぷり</p>
+        <p class="reco-name">彩り野菜のサラダボウル</p>
+        <p class="reco-sub">A棟食堂で提供中</p>
+      </div>
+      <span class="reco-arr">›</span>
+    </div>
+  </div>
+
+  <!-- ショック想起リマインダー（コンパクト） -->
+  <div class="sec" id="recallSec">
+    <div class="recall-card">
+      <div class="recall-row">
+        <div class="recall-icon">💭</div>
+        <div style="flex:1;">
+          <p class="recall-eye" id="recallEye">計測結果</p>
+          <p class="recall-ttl">あの時の血管年齢、覚えていますか</p>
+          <div class="recall-stat">
+            <span class="v" id="recallVage">—歳</span>
+            <span class="l" id="recallDiff">/ 実年齢 —歳</span>
+          </div>
+        </div>
+      </div>
+      <button class="recall-cta" onclick="openSheet()">今日の分を記録する</button>
+    </div>
+  </div>
+
+
+</div><!-- /pgHome -->
+
+<!-- ===== HISTORY PAGE ===== -->
+<div class="page" id="pgHistory">
+  <div class="pg-header" style="justify-content:space-between;">
+    <p class="pg-title dp">食事の記録</p>
+    <button class="btn-p" style="padding:10px 16px;font-size:13px;border-radius:999px;width:auto;" onclick="openSheet()">＋ 追加</button>
+  </div>
+
+  <div class="hist-page">
+
+    <!-- 週間サマリー -->
+    <div class="hist-summary">
+      <div class="hist-sum-item">
+        <p class="hist-sum-num dp" id="histDays">0</p>
+        <p class="hist-sum-lbl">今週の記録日数</p>
+      </div>
+      <div class="hist-sum-item">
+        <p class="hist-sum-num dp" id="histAvg">0</p>
+        <p class="hist-sum-lbl">平均野菜量（皿）</p>
+      </div>
+      <div class="hist-sum-item">
+        <p class="hist-sum-num dp" id="histStreak">0</p>
+        <p class="hist-sum-lbl">連続記録日数</p>
+      </div>
+    </div>
+
+    <div id="histListWrap"></div>
+
+  </div>
+</div>
+
+<!-- ===== SETTINGS PAGE ===== -->
+<div class="page" id="pgSettings">
+  <div class="pg-header">
+    <button class="pg-back" onclick="nav('home')">‹</button>
+    <p class="pg-title dp">通知の設定</p>
+  </div>
+
+  <div class="sg">
+    <p class="sgl">写真AI判定について</p>
+    <div class="sc" style="padding:16px;">
+      <p class="hint" style="margin:0;">写真から野菜量を推定する機能は、共有の判定サービス（管理者が設定したサーバー）を通じて動作します。ご自身でAPIキーを取得・入力する必要はありません。</p>
+    </div>
+  </div>
+
+  <div class="sg">
+    <p class="sgl">LINE連携</p>
+    <div class="sc" style="padding:16px;">
+      <p class="srts" style="margin:0 0 14px;line-height:1.7;">LINE公式アカウントを友だち追加し、トークで下の被験者IDを送信すると連携が完了します。連携後は、記録忘れリマインダーや血管年齢の想起通知がLINEに届くようになります（送信元はGoogle Apps Scriptで動く通知ボットです）。</p>
+      <div class="field" style="margin-bottom:0;">
+        <label>あなたの被験者ID（LINEのトークに送信してください）</label>
+        <input type="text" id="lineSubjectIdDisplay" readonly style="background:var(--m50);">
+      </div>
+    </div>
+  </div>
+
+  <div class="sg">
+    <p class="sgl">通知のタイミング</p>
+    <div class="sc">
+      <div class="sr">
+        <div class="sri">🍱</div>
+        <div class="srt"><p class="srtl">学食メニューのお知らせ</p><p class="srts">野菜たっぷりメニューが出る日に通知</p></div>
+        <button class="tgl on" onclick="this.classList.toggle('on')"><span class="tknob"></span></button>
+      </div>
+      <div class="tprow">
+        <button class="tp sel" onclick="selTime(this)">11:00 (昼前)</button>
+        <button class="tp" onclick="selTime(this)">17:00 (夕方)</button>
+      </div>
+      <div class="sr">
+        <div class="sri">📝</div>
+        <div class="srt"><p class="srtl">記録忘れリマインド</p><p class="srts">その日の記録がまだの時にお知らせ</p></div>
+        <button class="tgl on" onclick="this.classList.toggle('on')"><span class="tknob"></span></button>
+      </div>
+      <div class="tprow">
+        <button class="tp" onclick="selTime(this)">20:00</button>
+        <button class="tp sel" onclick="selTime(this)">21:30</button>
+        <button class="tp" onclick="selTime(this)">22:30</button>
+      </div>
+      <div class="sr">
+        <div class="sri">💭</div>
+        <div class="srt"><p class="srtl">血管年齢の想起リマインド</p><p class="srts">計測から1週間後・2週間後に結果を再通知</p></div>
+        <button class="tgl on" onclick="this.classList.toggle('on')"><span class="tknob"></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sg">
+    <p class="sgl">通知の頻度</p>
+    <div class="sc">
+      <div class="sr">
+        <div class="sri">🔔</div>
+        <div class="srt"><p class="srtl">1日の通知数を抑える</p><p class="srts">同じ日に複数の通知が重ならないよう自動調整</p></div>
+        <button class="tgl" onclick="this.classList.toggle('on')"><span class="tknob"></span></button>
+      </div>
+    </div>
+  </div>
+</div><!-- /pgSettings -->
+
+<!-- ===== VASCULAR AGE PAGE ===== -->
+<div class="page" id="pgVage">
+  <div class="vage-page">
+
+    <div class="vage-hero">
+      <div class="vage-hero-inner">
+        <p class="vage-eyebrow">最新の計測結果</p>
+        <div class="vage-nums">
+          <div class="vage-main">
+            <p class="label">血管年齢</p>
+            <div>
+              <span class="big dp" id="vpVage">29</span>
+              <span class="unit">歳</span>
+            </div>
+          </div>
+          <div class="vage-sep"></div>
+          <div class="vage-real">
+            <p class="label">実年齢</p>
+            <div>
+              <span class="big dp" id="vpReal">21</span>
+              <span class="unit">歳</span>
+            </div>
+          </div>
+        </div>
+        <div class="vage-diff-row">
+          <span class="d-num dp" id="vpDiff">+8歳</span>
+          <span class="d-lbl" id="vpDiffLbl">実年齢より血管年齢が<br>高い状態です</span>
+        </div>
+        <p class="vage-date" id="vpDate">計測日: —</p>
+      </div>
+    </div>
+
+    <div class="sec-head" style="margin:0 0 12px;">
+      <p class="sec-ttl dp">次回計測まで</p>
+    </div>
+    <div class="countdown-card">
+      <div class="cd-icon">📅</div>
+      <div class="cd-info">
+        <p class="cd-label">次回計測予定日まで</p>
+        <p class="cd-days dp" id="cdDays">12<span style="font-size:14px;font-weight:500;color:var(--ink6);"> 日</span></p>
+        <p class="cd-sub" id="cdDate">計測予定日: —</p>
+        <div class="cd-bar-wrap">
+          <div class="cd-bar" id="cdBar" style="width:40%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mh-card" id="mhCard" style="display:none;">
+      <p class="mh-title dp">計測履歴</p>
+      <div class="mh-list" id="mhList"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<div class="bnav" id="bnav">
+  <div class="ni active" id="niHome" onclick="nav('home')"><span class="ni-icon">⌂</span>ホーム</div>
+  <div class="ni" id="niRecord" onclick="nav('history')"><span class="ni-icon">📋</span>履歴</div>
+  <div class="ni" id="niVage" onclick="nav('vage')"><span class="ni-icon">◐</span>血管年齢</div>
+  <div class="ni" id="niSettings" onclick="nav('settings')"><span class="ni-icon">⚙</span>設定</div>
+</div>
+
+<!-- ===== RECORD SHEET ===== -->
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <button class="sclose" onclick="closeSheet()">✕</button>
+    <div class="sh"></div>
+    <p class="st dp">食事を記録</p>
+    <p class="ss">食堂メニュー・写真・手動入力からかんたん記録できます</p>
+
+    <div class="mtabs">
+      <button class="mtab active" id="tabC" onclick="switchMode('c')">🍱 食堂</button>
+      <button class="mtab" id="tabP" onclick="switchMode('p')">📷 写真AI</button>
+      <button class="mtab" id="tabM" onclick="switchMode('m')">✍️ 手動</button>
+    </div>
+
+    <!-- 食堂メニュー -->
+    <div class="mpanel active" id="panC">
+      <p class="cdate">本日の学食メニュー · タップで選択</p>
+      <div class="clist">
+        <div class="mc selected" data-g="192" onclick="toggleMenu(this)">
+          <div class="mth">🍛</div>
+          <div class="mi"><p class="mn">野菜カレー定食 <span style="font-size:10.5px;color:var(--ink4);font-weight:400;">約192g</span></p><p class="mm"><span class="vbadge">🥦 野菜多め</span> A定食</p></div>
+          <div class="chk">✓</div>
+        </div>
+        <div class="mc" data-g="64" onclick="toggleMenu(this)">
+          <div class="mth">🍜</div>
+          <div class="mi"><p class="mn">醤油ラーメン</p><p class="mm"><span class="vbadge" style="background:var(--c100);color:var(--c600);">野菜少なめ</span> 麺類</p></div>
+          <div class="chk">✓</div>
+        </div>
+        <div class="mc" data-g="128" onclick="toggleMenu(this)">
+          <div class="mth">🍱</div>
+          <div class="mi"><p class="mn">からあげ弁当 <span style="font-size:10.5px;color:var(--ink4);font-weight:400;">約128g</span></p><p class="mm"><span class="vbadge">🥦 野菜普通</span> 弁当</p></div>
+          <div class="chk">✓</div>
+        </div>
+        <div class="mc" data-g="256" onclick="toggleMenu(this)">
+          <div class="mth">🥗</div>
+          <div class="mi"><p class="mn">彩り野菜のサラダボウル <span style="font-size:10.5px;color:var(--ink4);font-weight:400;">約256g</span></p><p class="mm"><span class="vbadge">🥦 野菜たっぷり</span> サラダ</p></div>
+          <div class="chk">✓</div>
+        </div>
+        <div class="mc" data-g="64" onclick="toggleMenu(this)">
+          <div class="mth">🍝</div>
+          <div class="mi"><p class="mn">ナポリタン</p><p class="mm"><span class="vbadge" style="background:var(--c100);color:var(--c600);">野菜少なめ</span> パスタ</p></div>
+          <div class="chk">✓</div>
+        </div>
+        <div class="mc" data-g="128" onclick="toggleMenu(this)">
+          <div class="mth">🐟</div>
+          <div class="mi"><p class="mn">焼き鯖定食 <span style="font-size:10.5px;color:var(--ink4);font-weight:400;">約128g</span></p><p class="mm"><span class="vbadge">🥦 野菜普通</span> 定食</p></div>
+          <div class="chk">✓</div>
+        </div>
+      </div>
+      <button class="sub-btn" onclick="submitCanteen()">記録する</button>
+    </div>
+
+    <!-- 写真AI -->
+    <div class="mpanel" id="panP">
+      <input type="file" id="photoInputCamera" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoFile(this.files[0])">
+      <input type="file" id="photoInputGallery" accept="image/*" style="display:none" onchange="handlePhotoFile(this.files[0])">
+      <div id="stUpload">
+        <div class="pdrop">
+          <div class="pdrop-ic">📷</div>
+          <p class="pdrop-t">食事の写真を撮影 or 選択</p>
+          <p class="pdrop-s">写っている野菜の種類と量をAIが<br>自動で読み取ります</p>
+          <div class="pbtnrow">
+            <button class="pbtn prim" onclick="document.getElementById('photoInputCamera').click()">カメラで撮影</button>
+            <button class="pbtn ghost" onclick="document.getElementById('photoInputGallery').click()">写真を選ぶ</button>
+          </div>
+        </div>
+        <div class="ai-error" id="aiErrorBox" style="display:none;"></div>
+      </div>
+      <div id="stLoading" class="ai-loading" style="display:none;">
+        <div class="ai-spin">🔍</div>
+        <p class="ai-loading-txt">AIが写真から野菜を解析しています…</p>
+      </div>
+      <div id="stResult" style="display:none;">
+        <div class="air">
+          <div class="airh">
+            <div class="aipp" id="aipp">🍛</div>
+            <div><p class="airt" id="airt">AIが野菜を検出しました</p><p class="airs" id="airs">推定野菜量 約110g · 信頼度 中</p></div>
+          </div>
+          <div class="aidl" id="aidl">
+            <span class="dc"><span class="e">🥕</span>にんじん</span>
+            <span class="dc"><span class="e">🥦</span>ブロッコリー</span>
+            <span class="dc"><span class="e">🧅</span>玉ねぎ</span>
+          </div>
+          <p class="ainote">写真からの推定のため誤差が生じる場合があります。違う場合は手動タブから修正して記録してください。</p>
+        </div>
+        <button class="sub-btn" id="aiSubmitBtn" onclick="submitAiResult()">この内容で記録する</button>
+      </div>
+    </div>
+
+    <!-- 手動入力 -->
+    <div class="mpanel" id="panM">
+      <p class="cdate">よく食べる量をタップして記録</p>
+      <div class="manual-grid">
+        <button class="manual-item" onclick="submitManual('小鉢1つ',70,'🥬')"><span class="e">🥬</span><span class="t">小鉢1つ</span><span class="g">約70g</span></button>
+        <button class="manual-item" onclick="submitManual('副菜1品',100,'🥕')"><span class="e">🥕</span><span class="t">副菜1品</span><span class="g">約100g</span></button>
+        <button class="manual-item" onclick="submitManual('サラダ1皿',150,'🥗')"><span class="e">🥗</span><span class="t">サラダ1皿</span><span class="g">約150g</span></button>
+        <button class="manual-item" onclick="submitManual('野菜炒め1皿',180,'🍳')"><span class="e">🍳</span><span class="t">野菜炒め1皿</span><span class="g">約180g</span></button>
+        <button class="manual-item" onclick="submitManual('野菜ジュース',50,'🧃')"><span class="e">🧃</span><span class="t">野菜ジュース</span><span class="g">約50g</span></button>
+        <button class="manual-item" onclick="submitManual('具沢山スープ',90,'🍲')"><span class="e">🍲</span><span class="t">具沢山スープ</span><span class="g">約90g</span></button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 記録編集シート ===== -->
+<div class="overlay" id="editOverlay">
+  <div class="sheet">
+    <button class="sclose" onclick="closeEditSheet()">✕</button>
+    <div class="sh"></div>
+    <p class="st dp">記録を編集</p>
+    <p class="ss">品名や野菜量を修正するか、記録を削除できます</p>
+    <div class="field">
+      <label>品名</label>
+      <input type="text" id="editName">
+    </div>
+    <div class="field">
+      <label>野菜量（g）</label>
+      <input type="number" id="editGrams" min="0">
+    </div>
+    <button class="sub-btn" onclick="saveEditLog()">保存する</button>
+    <button class="sub-btn danger" onclick="deleteEditLog()">この記録を削除</button>
+  </div>
+</div>
+
+<script>
+// ===== データ保存キー =====
+const PROFILE_KEY = 'vegelog_profile';
+const MEAS_KEY = 'vegelog_measurements';
+const LOGS_KEY = 'vegelog_logs';
+const VEG_TARGET = 320;
+const GAS_URL_STORAGE = 'vegelog_gas_url';
+
+// ここに、管理者があらかじめデプロイしたGAS WebアプリのURLを設定しておく。
+// 利用者側の画面には一切表示されず、常にこのURLが裏側で使われる
+// （LINE連携・記録保存・写真AI判定すべて共通）。
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec';
+
+// 実際に使うGAS URL。localStorageに個別設定があれば（開発・検証用）そちらを優先する。
+function getGasUrl(){
+  return localStorage.getItem(GAS_URL_STORAGE) || DEFAULT_GAS_URL || '';
+}
+
+// GASのWebアプリへデータ送信（LINE通知用）。GAS Webアプリはレスポンスに
+// CORSヘッダーを付けないため、mode:'no-cors' で「送信するだけ」の
+// fire-and-forget呼び出しにしている（レスポンス内容は読み取らない）。
+function syncToGas(action, payload){
+  const url = getGasUrl();
+  if(!url) return;
+  try{
+    const sep = url.indexOf('?') === -1 ? '?' : '&';
+    fetch(url + sep + 'action=' + action, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+  }catch(err){
+    console.error('syncToGas failed', err);
+  }
+}
+
+function loadJSON(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){ return fallback; }
+}
+function saveJSON(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+}
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function dateStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function todayStr(){ return dateStr(new Date()); }
+function formatDateSlash(ds){
+  const d = new Date(ds+'T00:00:00');
+  return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+}
+function formatDateLabel(ds){
+  const today = todayStr();
+  const y = new Date(); y.setDate(y.getDate()-1);
+  const yesterday = dateStr(y);
+  if(ds === today) return '今日 · ' + formatMD(ds);
+  if(ds === yesterday) return '昨日 · ' + formatMD(ds);
+  return formatMD(ds);
+}
+function formatMD(ds){
+  const d = new Date(ds+'T00:00:00');
+  const w = ['日','月','火','水','木','金','土'][d.getDay()];
+  return (d.getMonth()+1)+'月'+d.getDate()+'日（'+w+'）';
+}
+
+// ===== ページ管理 =====
+const pageIds = ['pgOnboard','pgMeasure','pgShock','pgHome','pgSettings','pgVage','pgHistory'];
+const mainPages = { home:'pgHome', settings:'pgSettings', vage:'pgVage', history:'pgHistory' };
+const navItems  = { home:'niHome', settings:'niSettings', vage:'niVage', history:'niRecord' };
+let currentPage = 'pgOnboard';
+let gender = '';
+
+function showPage(id) {
+  pageIds.forEach(p => {
+    const el = document.getElementById(p);
+    if(el) el.classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  const showNav = (id === 'pgHome' || id === 'pgSettings' || id === 'pgVage' || id === 'pgHistory');
+  document.getElementById('bnav').style.display = showNav ? 'flex' : 'none';
+  currentPage = id;
+  window.scrollTo(0,0);
+}
+
+function nav(page) {
+  Object.values(navItems).forEach(ni => {
+    const el = document.getElementById(ni);
+    if(el) el.classList.remove('active');
+  });
+  if(navItems[page]) document.getElementById(navItems[page]).classList.add('active');
+  if(page === 'home') renderHome();
+  if(page === 'history') renderHistory();
+  if(page === 'vage') renderVagePage();
+  if(page === 'settings'){
+    const sidEl = document.getElementById('lineSubjectIdDisplay');
+    if(sidEl){
+      const profile = loadJSON(PROFILE_KEY, {});
+      sidEl.value = profile.id || '(未登録)';
+    }
+  }
+  showPage(mainPages[page] || page);
+}
+
+// ===== STEP1: 登録フォーム =====
+function selGender(btn, val) {
+  document.querySelectorAll('.radio-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  gender = val;
+  checkOb();
+}
+function checkOb() {
+  const id  = document.getElementById('inId').value.trim();
+  const age = document.getElementById('inAge').value;
+  document.getElementById('obBtn1').disabled = !(id && age && gender);
+}
+function goStep2(){
+  const id = document.getElementById('inId').value.trim();
+  const age = parseInt(document.getElementById('inAge').value);
+  saveJSON(PROFILE_KEY, { id: id, age: age, gender: gender });
+  showPage('pgMeasure');
+}
+
+// ===== STEP2: 計測値入力 =====
+function checkMeasure() {
+  const v = document.getElementById('inVage').value;
+  const g = document.getElementById('inVegi').value;
+  document.getElementById('obBtn2').disabled = !(v && g);
+}
+
+function submitMeasure() {
+  const vage    = parseInt(document.getElementById('inVage').value);
+  const vegi    = parseInt(document.getElementById('inVegi').value);
+  const profile = loadJSON(PROFILE_KEY, {});
+  const realAge = profile.age;
+  const diff    = vage - realAge;
+
+  document.getElementById('shockVageNum').textContent = vage;
+  document.getElementById('shockRealAge').textContent = realAge + '歳';
+  document.getElementById('shockDiff').textContent = (diff >= 0 ? '+' : '') + diff + '歳';
+
+  if (diff >= 10) {
+    document.getElementById('shockMsg').innerHTML = '血管年齢がかなり<br>高い状態です。';
+    document.getElementById('shockMsgSub').textContent =
+      '今すぐ生活習慣を見直すことで改善できます。野菜摂取から一緒に始めましょう。';
+  } else if (diff >= 5) {
+    document.getElementById('shockMsg').innerHTML = '今の生活習慣を<br>見直すチャンスです。';
+    document.getElementById('shockMsgSub').textContent =
+      '野菜を意識して摂ることで、血管年齢は改善できます。一緒に記録を続けましょう。';
+  } else if (diff >= 1) {
+    document.getElementById('shockMsg').innerHTML = 'やや気をつけたい<br>状態です。';
+    document.getElementById('shockMsgSub').textContent =
+      '少し意識を変えるだけで大きく改善できます。毎日の野菜記録から始めましょう。';
+  } else {
+    document.getElementById('shockMsg').innerHTML = '血管年齢は<br>良好な状態です！';
+    document.getElementById('shockMsgSub').textContent =
+      'この調子を維持しましょう。毎日の野菜記録で健康をキープ！';
+  }
+
+  const meas = loadJSON(MEAS_KEY, []);
+  meas.push({ date: todayStr(), vage: vage, realAge: realAge, vegi: vegi });
+  saveJSON(MEAS_KEY, meas);
+
+  syncToGas('syncmeasurement', {
+    subjectId: profile.id || '',
+    date: todayStr(),
+    vage: vage,
+    realAge: realAge,
+    vegi: vegi
+  });
+
+  renderVagePage();
+  renderHome();
+  showPage('pgShock');
+}
+
+// ===== ホーム描画 =====
+function renderHome(){
+  const profile = loadJSON(PROFILE_KEY, {});
+  const logs = loadJSON(LOGS_KEY, []);
+  const meas = loadJSON(MEAS_KEY, []);
+
+  if(profile.id){
+    document.getElementById('homeAvatar').textContent = profile.id.slice(0,2).toUpperCase();
+    document.getElementById('homeUsername').textContent = profile.id + ' さん';
+  }
+
+  const today = todayStr();
+  const todayGrams = logs.filter(function(l){ return l.date === today; })
+                          .reduce(function(s,l){ return s + l.grams; }, 0);
+  document.getElementById('homeVegiScore').textContent = todayGrams;
+  const pct = Math.min(Math.round(todayGrams / VEG_TARGET * 100), 100);
+  document.getElementById('homeVegiBar').style.width = pct + '%';
+  const remain = Math.max(0, VEG_TARGET - todayGrams);
+  document.getElementById('homeVegiSub').textContent =
+    remain > 0
+      ? '目標 ' + VEG_TARGET + 'g まであと ' + remain + 'g'
+      : '今日の目標達成！' + VEG_TARGET + 'g以上摂取しました 🎉';
+
+  if(meas.length){
+    const last = meas[meas.length-1];
+    const diff = last.vage - last.realAge;
+    document.getElementById('recallEye').textContent = '前回の計測結果';
+    document.getElementById('recallVage').textContent = last.vage + '歳';
+    document.getElementById('recallDiff').textContent =
+      '/ 実年齢' + last.realAge + '歳 (' + (diff >= 0 ? '+' : '') + diff + '歳)';
+  }
+
+  renderWeekChart(logs);
+}
+
+function renderWeekChart(logs){
+  const wrap = document.getElementById('weekChart');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const dayLabels = ['日','月','火','水','木','金','土'];
+  const now = new Date();
+  for(let i=6; i>=0; i--){
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const ds = dateStr(d);
+    const grams = logs.filter(function(l){ return l.date === ds; })
+                       .reduce(function(s,l){ return s + l.grams; }, 0);
+    const isToday = (i === 0);
+    const h = grams > 0 ? Math.max(8, Math.min(78, Math.round(grams / VEG_TARGET * 78))) : 4;
+    const bc = document.createElement('div');
+    bc.className = 'bc' + (isToday ? ' is-today' : '');
+    bc.innerHTML =
+      '<div class="bt"><div class="bar' + (isToday ? ' today' : '') + '" style="height:' + h + 'px;"></div></div>' +
+      '<div class="bd">' + dayLabels[d.getDay()] + '</div>';
+    wrap.appendChild(bc);
+  }
+}
+
+// ===== 履歴描画 =====
+function computeHistorySummary(logs){
+  const now = new Date();
+  const recentDates = {};
+  for(let i=0; i<7; i++){
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    recentDates[dateStr(d)] = 0;
+  }
+  logs.forEach(function(l){
+    if(recentDates.hasOwnProperty(l.date)) recentDates[l.date] += l.grams;
+  });
+  const activeDays = Object.keys(recentDates).filter(function(k){ return recentDates[k] > 0; });
+  const days = activeDays.length;
+  const totalGrams = activeDays.reduce(function(s,k){ return s + recentDates[k]; }, 0);
+  const avg = days > 0 ? (totalGrams / days / 70).toFixed(1) : '0.0';
+
+  // 連続記録日数（今日 or 昨日を起点に遡る）
+  let streak = 0;
+  let cursor = new Date(now);
+  const hasToday = logs.some(function(l){ return l.date === todayStr(); });
+  if(!hasToday) cursor.setDate(cursor.getDate() - 1);
+  while(true){
+    const ds = dateStr(cursor);
+    const has = logs.some(function(l){ return l.date === ds; });
+    if(!has) break;
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return { days: days, avg: avg, streak: streak };
+}
+
+function renderHistory(){
+  const logs = loadJSON(LOGS_KEY, []).slice().sort(function(a,b){
+    const ka = a.date + a.time, kb = b.date + b.time;
+    return ka < kb ? 1 : (ka > kb ? -1 : 0);
+  });
+  const s = computeHistorySummary(logs);
+  document.getElementById('histDays').textContent = s.days;
+  document.getElementById('histAvg').textContent = s.avg;
+  document.getElementById('histStreak').textContent = s.streak;
+
+  const wrap = document.getElementById('histListWrap');
+  if(!logs.length){
+    wrap.innerHTML =
+      '<div class="hist-empty">' +
+        '<div class="hist-empty-icon">🥦</div>' +
+        '<p class="hist-empty-txt">まだ記録がありません</p>' +
+        '<p class="hist-empty-sub">食事を記録すると、ここに履歴が<br>表示されます。</p>' +
+        '<button class="hist-add-btn" onclick="openSheet()">＋ 記録する</button>' +
+      '</div>';
+    return;
+  }
+
+  const groups = [];
+  const groupMap = {};
+  logs.forEach(function(l){
+    if(!groupMap[l.date]){
+      groupMap[l.date] = [];
+      groups.push(l.date);
+    }
+    groupMap[l.date].push(l);
+  });
+
+  let html = '';
+  groups.forEach(function(ds){
+    html += '<div class="hist-date-group"><p class="hist-date-label">' + formatDateLabel(ds) + '</p>';
+    groupMap[ds].forEach(function(l){
+      html +=
+        '<div class="hist-item" onclick="openEditSheet(\'' + l.id + '\')">' +
+          '<div class="hist-thumb">' + (l.icon || '🥗') + '</div>' +
+          '<div class="hist-info">' +
+            '<p class="hist-name">' + l.name + '</p>' +
+            '<p class="hist-meta"><span class="hist-veg">' + (l.tag || '記録') + '</span><span class="hist-time">' + l.time + '</span></p>' +
+          '</div>' +
+          '<span class="hist-type">' + (l.source || '') + '</span>' +
+          '<span class="hist-chev">›</span>' +
+        '</div>';
+    });
+    html += '</div>';
+  });
+  wrap.innerHTML = html;
+}
+
+// ===== 血管年齢ページ描画 =====
+function renderVagePage(){
+  const meas = loadJSON(MEAS_KEY, []);
+  if(!meas.length) return;
+  const last = meas[meas.length-1];
+  const diff = last.vage - last.realAge;
+
+  document.getElementById('vpVage').textContent = last.vage;
+  document.getElementById('vpReal').textContent = last.realAge;
+  document.getElementById('vpDiff').textContent = (diff >= 0 ? '+' : '') + diff + '歳';
+  document.getElementById('vpDiffLbl').textContent =
+    diff > 0 ? '実年齢より血管年齢が高い状態です' : '血管年齢は良好な状態です';
+  document.getElementById('vpDate').textContent = '計測日: ' + formatDateSlash(last.date);
+
+  const lastDate = new Date(last.date + 'T00:00:00');
+  const next = new Date(lastDate);
+  next.setDate(next.getDate() + 14);
+  const now = new Date();
+  const remain = Math.max(0, Math.ceil((next - now) / 86400000));
+  document.getElementById('cdDays').innerHTML =
+    remain + '<span style="font-size:14px;font-weight:500;color:var(--ink6);"> 日</span>';
+  document.getElementById('cdDate').textContent = '計測予定日: ' + formatDateSlash(dateStr(next));
+  const pct = Math.round((1 - remain/14) * 100);
+  document.getElementById('cdBar').style.width = Math.max(4, Math.min(100, pct)) + '%';
+
+  const mhCard = document.getElementById('mhCard');
+  if(meas.length > 1){
+    mhCard.style.display = 'block';
+    const html = meas.slice().reverse().map(function(m){
+      const d = m.vage - m.realAge;
+      return '<div class="mh-item"><span class="mh-date">' + formatDateSlash(m.date) + '</span><span class="mh-val">' + m.vage + '歳 (' + (d>=0?'+':'') + d + ')</span></div>';
+    }).join('');
+    document.getElementById('mhList').innerHTML = html;
+  } else {
+    mhCard.style.display = 'none';
+  }
+}
+
+function goHome() {
+  document.getElementById('niHome').classList.add('active');
+  renderHome();
+  showPage('pgHome');
+}
+
+// ===== ログ追加共通処理 =====
+function addLog(entry){
+  const logs = loadJSON(LOGS_KEY, []);
+  const now = new Date();
+  const newEntry = {
+    id: Date.now() + '-' + Math.floor(Math.random()*1000),
+    date: todayStr(),
+    time: pad(now.getHours()) + ':' + pad(now.getMinutes()),
+    name: entry.name,
+    grams: entry.grams,
+    tag: entry.tag || '',
+    source: entry.source || '',
+    icon: entry.icon || '🥗'
+  };
+  logs.push(newEntry);
+  saveJSON(LOGS_KEY, logs);
+
+  const profile = loadJSON(PROFILE_KEY, {});
+  syncToGas('synclog', {
+    id: newEntry.id,
+    subjectId: profile.id || '',
+    date: newEntry.date,
+    time: newEntry.time,
+    name: newEntry.name,
+    grams: newEntry.grams,
+    source: newEntry.source
+  });
+}
+
+function quickAdd(name, grams, icon){
+  addLog({ name: name, grams: grams, icon: icon, tag: 'クイック追加', source: 'クイック追加' });
+  renderHome();
+  if(currentPage === 'pgHistory') renderHistory();
+}
+
+// ===== 記録の編集・削除 =====
+let editingLogId = null;
+function openEditSheet(id){
+  const logs = loadJSON(LOGS_KEY, []);
+  const log = logs.find(function(l){ return l.id === id; });
+  if(!log) return;
+  editingLogId = id;
+  document.getElementById('editName').value = log.name;
+  document.getElementById('editGrams').value = log.grams;
+  document.getElementById('editOverlay').classList.add('open');
+}
+function closeEditSheet(){
+  document.getElementById('editOverlay').classList.remove('open');
+  editingLogId = null;
+}
+function saveEditLog(){
+  if(!editingLogId) return;
+  const name = document.getElementById('editName').value.trim();
+  const grams = parseInt(document.getElementById('editGrams').value);
+  if(!name || isNaN(grams) || grams < 0){
+    alert('品名とグラム数（0以上の数字）を入力してください。');
+    return;
+  }
+  const logs = loadJSON(LOGS_KEY, []);
+  const idx = logs.findIndex(function(l){ return l.id === editingLogId; });
+  if(idx === -1){ closeEditSheet(); return; }
+  logs[idx].name = name;
+  logs[idx].grams = grams;
+  saveJSON(LOGS_KEY, logs);
+  syncToGas('updatelog', { id: editingLogId, name: name, grams: grams });
+  closeEditSheet();
+  renderHistory();
+  renderHome();
+}
+function deleteEditLog(){
+  if(!editingLogId) return;
+  if(!confirm('この記録を削除しますか？この操作は取り消せません。')) return;
+  const logs = loadJSON(LOGS_KEY, []).filter(function(l){ return l.id !== editingLogId; });
+  saveJSON(LOGS_KEY, logs);
+  syncToGas('deletelog', { id: editingLogId });
+  closeEditSheet();
+  renderHistory();
+  renderHome();
+}
+
+// ===== 記録シート =====
+function openSheet() {
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSheet() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('stUpload').style.display = 'block';
+  document.getElementById('stLoading').style.display = 'none';
+  document.getElementById('stResult').style.display = 'none';
+  document.getElementById('aiErrorBox').style.display = 'none';
+  document.getElementById('photoInputCamera').value = '';
+  document.getElementById('photoInputGallery').value = '';
+  switchMode('c');
+}
+function switchMode(m) {
+  document.getElementById('tabC').classList.toggle('active', m === 'c');
+  document.getElementById('tabP').classList.toggle('active', m === 'p');
+  document.getElementById('tabM').classList.toggle('active', m === 'm');
+  document.getElementById('panC').classList.toggle('active', m === 'c');
+  document.getElementById('panP').classList.toggle('active', m === 'p');
+  document.getElementById('panM').classList.toggle('active', m === 'm');
+}
+function toggleMenu(card) {
+  card.classList.toggle('selected');
+}
+
+function submitCanteen() {
+  const selected = document.querySelectorAll('#panC .mc.selected');
+  selected.forEach(function(card){
+    const grams = parseInt(card.dataset.g || '70');
+    const nameEl = card.querySelector('.mn');
+    const name = nameEl.childNodes[0].textContent.trim();
+    const icon = card.querySelector('.mth').textContent.trim();
+    const tag = card.querySelector('.vbadge').textContent.trim();
+    addLog({ name: name, grams: grams, icon: icon, tag: tag, source: '食堂' });
+  });
+  closeSheet();
+  renderHome();
+  if(currentPage === 'pgHistory') renderHistory();
+}
+
+// ===== 写真AI判定（Claude Vision API） =====
+const VEG_EMOJI = {
+  'にんじん':'🥕','人参':'🥕','ブロッコリー':'🥦','玉ねぎ':'🧅','たまねぎ':'🧅',
+  'トマト':'🍅','ミニトマト':'🍅','キャベツ':'🥬','ほうれん草':'🥬','小松菜':'🥬',
+  'レタス':'🥬','もやし':'🌱','ピーマン':'🫑','パプリカ':'🫑','なす':'🍆','ナス':'🍆',
+  'じゃがいも':'🥔','ジャガイモ':'🥔','きゅうり':'🥒','キュウリ':'🥒','ねぎ':'🧄',
+  'コーン':'🌽','とうもろこし':'🌽','大根':'🥬','きのこ':'🍄','しいたけ':'🍄'
+};
+function veggieEmoji(name){
+  for(const key in VEG_EMOJI){ if(name && name.indexOf(key) !== -1) return VEG_EMOJI[key]; }
+  return '🥗';
+}
+function confidenceLabel(c){
+  if(c === 'high') return '高';
+  if(c === 'low') return '低';
+  return '中';
+}
+
+let lastAiResult = null;
+
+function showAiError(msg){
+  document.getElementById('stLoading').style.display = 'none';
+  document.getElementById('stUpload').style.display = 'block';
+  document.getElementById('stResult').style.display = 'none';
+  const box = document.getElementById('aiErrorBox');
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+
+function handlePhotoFile(file){
+  if(!file) return;
+  const gasUrl = getGasUrl();
+  if(!gasUrl){
+    showAiError('写真AI判定を使うには管理者によるGAS連携の設定が必要です。');
+    return;
+  }
+  document.getElementById('aiErrorBox').style.display = 'none';
+  document.getElementById('stUpload').style.display = 'none';
+  document.getElementById('stLoading').style.display = 'block';
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const dataUrl = e.target.result;
+    const mediaType = dataUrl.substring(5, dataUrl.indexOf(';'));
+    const base64 = dataUrl.substring(dataUrl.indexOf(',') + 1);
+    analyzePhoto(base64, mediaType);
+  };
+  reader.onerror = function(){
+    showAiError('画像の読み込みに失敗しました。もう一度お試しください。');
+  };
+  reader.readAsDataURL(file);
+}
+
+// 写真解析はGAS（管理者があらかじめ用意したサーバー）を経由して行う。
+// Anthropic APIキーはGAS側のスクリプトプロパティにのみ保存されており、
+// このブラウザ側のコードには一切含まれない。
+async function analyzePhoto(base64, mediaType){
+  const gasUrl = getGasUrl();
+  try{
+    const sep = gasUrl.indexOf('?') === -1 ? '?' : '&';
+    // GASはCORSプリフライトに対応していないため、content-typeを
+    // text/plain にして「シンプルリクエスト」としてプリフライトを回避する。
+    const res = await fetch(gasUrl + sep + 'action=analyzephoto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ base64: base64, mediaType: mediaType })
+    });
+    if(!res.ok){
+      throw new Error('サーバーとの通信に失敗しました（status ' + res.status + '）。');
+    }
+    const text = await res.text();
+    let parsed;
+    try{ parsed = JSON.parse(text); }
+    catch(e2){ throw new Error('サーバーの応答を解析できませんでした。もう一度お試しください。'); }
+
+    if(parsed.error) throw new Error(parsed.error);
+    if(!parsed.items || !parsed.items.length || !parsed.grams){
+      throw new Error('写真から野菜を検出できませんでした。別の写真でお試しください。');
+    }
+    showAiResultData(parsed);
+  }catch(err){
+    console.error(err);
+    showAiError(err.message || '通信エラーが発生しました。ネットワーク環境を確認し、もう一度お試しください。');
+  }
+}
+
+function showAiResultData(parsed){
+  lastAiResult = parsed;
+  document.getElementById('aipp').textContent = veggieEmoji(parsed.items[0]);
+  document.getElementById('airt').textContent = 'AIが野菜を検出しました';
+  document.getElementById('airs').textContent = '推定野菜量 約' + parsed.grams + 'g · 信頼度 ' + confidenceLabel(parsed.confidence);
+  document.getElementById('aidl').innerHTML = parsed.items.map(function(it){
+    return '<span class="dc"><span class="e">' + veggieEmoji(it) + '</span>' + it + '</span>';
+  }).join('');
+  document.getElementById('aiSubmitBtn').textContent = 'この内容で記録する（約' + parsed.grams + 'g）';
+
+  document.getElementById('stLoading').style.display = 'none';
+  document.getElementById('stUpload').style.display = 'none';
+  document.getElementById('stResult').style.display = 'block';
+}
+
+function submitAiResult(){
+  if(!lastAiResult) return;
+  addLog({
+    name: 'AI判定: ' + lastAiResult.items.join('・'),
+    grams: lastAiResult.grams,
+    icon: veggieEmoji(lastAiResult.items[0]),
+    tag: '写真AI判定',
+    source: '写真AI'
+  });
+  closeSheet();
+  renderHome();
+  if(currentPage === 'pgHistory') renderHistory();
+}
+function submitManual(name, grams, icon){
+  addLog({ name: name, grams: grams, icon: icon, tag: '手動記録', source: '手動' });
+  closeSheet();
+  renderHome();
+  if(currentPage === 'pgHistory') renderHistory();
+}
+
+function selTime(btn) {
+  btn.parentElement.querySelectorAll('.tp').forEach(function(p){ p.classList.remove('sel'); });
+  btn.classList.add('sel');
+}
+
+// ===== 初期化 =====
+function initApp(){
+  document.getElementById('bnav').style.display = 'none';
+  const profile = loadJSON(PROFILE_KEY, null);
+  const meas = loadJSON(MEAS_KEY, []);
+  if(profile && profile.id && meas.length){
+    renderHome();
+    renderHistory();
+    renderVagePage();
+    document.getElementById('niHome').classList.add('active');
+    showPage('pgHome');
+  }
+}
+initApp();
+</script>
+</body>
+</html>
